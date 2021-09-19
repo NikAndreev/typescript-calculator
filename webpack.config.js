@@ -6,6 +6,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const OptimizeCssAssetWebpackPlugin = require('optimize-css-assets-webpack-plugin');
 const TerserWebpackPlugin = require('terser-webpack-plugin');
 const ImageminPlugin = require('imagemin-webpack');
+const StylelintPlugin = require('stylelint-webpack-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
 const isProd = !isDev;
@@ -41,6 +42,11 @@ const plugins = () => {
 		new MiniCssExtractPlugin({
 			filename: `./css/${filename('css')}`,
 		}),
+		new StylelintPlugin({
+			exclude: ['node_modules', 'scss/_normalize.scss'],
+			fix: true
+			
+		})
 	];
 
 	if (isProd) {
