@@ -2,11 +2,7 @@
  * @jest-environment jsdom
  */
 
-const {clear, deleteChar, addChar, calculate} = require('./src/ts/template')
-
-test('Clear should return empty string', ()=> {
-	expect(clear()).toBe('')
-})
+const {deleteChar, addChar, calculate} = require('./src/ts/template')
 
 test('DeleteChar should return string without last char', ()=> {
 	expect(deleteChar('1+2*3')).toBe('1+2*')

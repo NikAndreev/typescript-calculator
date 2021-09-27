@@ -159,4 +159,4 @@ function doInBrackets(array: string[], startIndex: number) {
   }
 }
 
-module.exports = { clear, deleteChar, addChar, calculate };
+module.exports = { deleteChar, addChar, calculate };

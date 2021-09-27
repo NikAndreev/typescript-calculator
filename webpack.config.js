@@ -1,167 +1,81 @@
 const path = require('path');
-const HTMLWebpackPlugin = require('html-webpack-plugin');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const OptimizeCssAssetWebpackPlugin = require('optimize-css-assets-webpack-plugin');
-const TerserWebpackPlugin = require('terser-webpack-plugin');
-const ImageminPlugin = require('imagemin-webpack');
 const StylelintPlugin = require('stylelint-webpack-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
-const isProd = !isDev;
-
-const filename = (ext) => isDev ? `[name].${ext}` : `[name].[contenthash].${ext}`;
 
 const optimization = () => {
 	const configObj = {
 		splitChunks: {
 			chunks: 'all'
-		}
+		},
+		minimizer: [
+			new OptimizeCssAssetWebpackPlugin({})
+		],
 	};
-
-	if (isProd) {
-		configObj.minimizer = [
-			new OptimizeCssAssetWebpackPlugin(),
-			new TerserWebpackPlugin()
-		];
-	}
-
 }
-
-const plugins = () => {
-	const basePlugins = [
-		new HTMLWebpackPlugin({
-			template: path.resolve(__dirname, 'src/index.html'),
-			filename: 'index.html',
-			minify: {
-				collapseWhitespace: isProd
-			}
-		}),
-		new CleanWebpackPlugin(),
-		new MiniCssExtractPlugin({
-			filename: `./css/${filename('css')}`,
-		}),
-		new StylelintPlugin({
-			exclude: ['node_modules', 'scss/_normalize.scss'],
-			fix: true
-			
-		})
-	];
-
-	if (isProd) {
-		basePlugins.push(
-			new ImageminPlugin({
-		      bail: false,
-		      cache: true,
-		      imageminOptions: {
-		        plugins: [
-		          ["gifsicle", { interlaced: true }],
-		          ["jpegtran", { progressive: true }],
-		          ["optipng", { optimizationLevel: 5 }],
-		          [
-		            "svgo",
-		            {
-		              plugins: [
-		                {
-		                  removeViewBox: false
-		                }
-		              ]
-		            }
-		          ]
-		        ]
-		      }
-		    })
-		)
-	}
-
-	return basePlugins;
-}
-
+ 
 module.exports = {
-	context: path.resolve(__dirname, 'src'),
-	mode: 'development',
-	entry: './main.js',
+	entry: './src/index.js',
 	output: {
-		filename: `./js/${filename('js')}`,
-		path: path.resolve(__dirname, 'dist'),
-		publicPath: ''
+		path: path.resolve(__dirname, './dist'),
+		filename: 'js/template.min.js',
+		publicPath: '/dist/'
 	},
 	devServer: {
+		static: './',
 		historyApiFallback: true,
 		open: true,
 		compress: true,
 		hot: true,
 		port: 3000,
 	},
-	optimization: optimization(),
-	plugins: plugins(),
-	devtool: isProd ? false : 'source-map',
 	module: {
 		rules: [
-			{
-		        test: /\.tsx?$/,
-		        use: 'ts-loader',
-		        exclude: /node_modules/,
-	      	},
-			{
-				test: /\.html$/,
-				loader: 'html-loader',
-			},
-			{
-				test: /\.css$/i,
-				use: [
-					{
-						loader: MiniCssExtractPlugin.loader,
-						options: {
-							hmr: isDev
-						},
-					},
-					'css-loader'
-				]
-			},
-			{
-				test: /\.s[ac]ss$/,
-				use: [
-					{
-						loader: MiniCssExtractPlugin.loader,
-						options: {
-							publicPath: (resourcePath, context) => {
-								return path.relative(path.dirname(resourcePath), context) + '/';
-							}
-						}
-
-					}, 
-					'css-loader', 
-					'sass-loader'
-				],
-			},
-			{
-				test: /\.js$/,
-				exclude: /node_modules/,
-				use: ['babel-loader']
-			},
-			{
-				test: /\.(?:|gif|png|jpg|jpeg|svg)$/,
-				use: [{
-					loader: 'file-loader',
-					options: {
-						name: `./img/${filename('[ext]')}`
-					}
-				}]
-			},
-			{
-				test: /\.(?:|woff2)$/,
-				use: [{
-					loader: 'file-loader',
-					options: {
-						name: `./fonts/${filename('[ext]')}`
-					}
-				}]
-			}
+		{
+	        test: /\.tsx?$/,
+	        use: 'ts-loader',
+	        exclude: /node_modules/,
+      	},
+		{
+			test:/.(s*)css$/,
+			use: [
+				MiniCssExtractPlugin.loader,
+				{
+                    loader: 'css-loader',
+                    options: {
+                        url: false
+                    }
+                },
+                'postcss-loader',
+				'sass-loader',
+			]
+		},
+		{
+			test: /\.js$/,
+			use: ['babel-loader'],
+			exclude: /node_modules/,
+		},
 		]
 	},
 	resolve: {
 		extensions: ['.tsx', '.ts', '.js'],
 	},
-}
+	optimization: optimization(),
+	devtool: isDev ? 'source-map' : false,
+	plugins: [
+		new CleanWebpackPlugin(),
+		new MiniCssExtractPlugin({
+			filename: './css/template.min.css',
+		}),
+		new StylelintPlugin({
+			exclude: ['node_modules', './src/scss/_normalize.scss', './dist/css/template.min.css', './coverage'],
+			fix: true
+			
+		})
+	]
+};
+
